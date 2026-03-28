@@ -8,16 +8,17 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body class="bg-gray-50 p-4">
-  <div class="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
-    <h1 class="text-2xl font-bold text-center mb-4">予約システム デモ体験</h1>
+  <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6 mt-4 border border-gray-100">
+    <h1 class="text-2xl font-black text-center mb-1 text-gray-800 tracking-wider">自動予約デモ体験</h1>
+    <p class="text-[10px] text-center text-gray-400 mb-6 uppercase tracking-widest">Kuroko Partner</p>
     
-    <p id="status" class="text-center text-sm text-gray-500 mb-6 border-b pb-4">LINE連携の準備中...</p>
+    <p id="status" class="text-center text-sm text-gray-400 mb-6 border-b pb-4">LINE連携の準備中...</p>
 
-    <form id="reservationForm" class="space-y-4">
+    <form id="reservationForm" class="space-y-5">
       
       <div>
-        <label class="block text-sm font-medium text-gray-700">体験する業種を選んでください</label>
-        <select id="industry" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+        <label class="block text-sm font-bold text-gray-700 mb-1">体験する業種</label>
+        <select id="industry" required class="block w-full rounded-xl border-gray-200 shadow-sm p-3 border bg-gray-50 focus:ring-2 focus:ring-blue-400 outline-none">
           <option value="">選択してください</option>
           <option value="美容室">✂️ 美容室</option>
           <option value="飲食店">🍽️ 飲食店</option>
@@ -27,32 +28,30 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">ご希望メニュー</label>
-        <select id="menu" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+        <label class="block text-sm font-bold text-gray-700 mb-1">ご希望メニュー</label>
+        <select id="menu" required class="block w-full rounded-xl border-gray-200 shadow-sm p-3 border bg-gray-50 focus:ring-2 focus:ring-blue-400 outline-none">
           <option value="">先に業種を選んでください</option>
         </select>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">お名前（LINEから自動取得）</label>
-        <input type="text" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-100" readonly>
+        <label class="block text-sm font-bold text-gray-700 mb-1">お名前 <span class="text-[10px] text-blue-500 font-normal">※LINEから自動取得</span></label>
+        <input type="text" id="name" required class="block w-full rounded-xl border-gray-200 shadow-inner p-3 border bg-gray-100 text-gray-600 outline-none" readonly>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">ご希望日時</label>
-        <input type="datetime-local" id="datetime" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+        <label class="block text-sm font-bold text-gray-700 mb-1">ご希望日時</label>
+        <input type="datetime-local" id="datetime" required class="block w-full rounded-xl border-gray-200 shadow-sm p-3 border bg-gray-50 focus:ring-2 focus:ring-blue-400 outline-none">
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 mt-6 shadow-md transition-all">
-        この内容でテスト送信する
+      <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 px-4 rounded-xl hover:bg-blue-700 mt-8 shadow-md transition-all active:scale-95 tracking-widest">
+        予約をテスト送信する
       </button>
     </form>
   </div>
 
   <script>
-    // --------------------------------------------------
-    // 1. 業種に合わせてメニューの選択肢を変える仕組み
-    // --------------------------------------------------
+    // 業種ごとのメニュー切り替え
     const menuData = {
       "美容室": ["カット＆カラー", "パーマ", "トリートメント"],
       "飲食店": ["ディナーコース予約", "席のみ予約", "テイクアウト"],
@@ -65,9 +64,7 @@
 
     industrySelect.addEventListener('change', function() {
       const selectedIndustry = this.value;
-      menuSelect.innerHTML = '<option value="">選択してください</option>'; // 一旦中身を空っぽにする
-      
-      // 選ばれた業種のメニューがあれば、それを選択肢に追加する
+      menuSelect.innerHTML = '<option value="">選択してください</option>';
       if (menuData[selectedIndustry]) {
         menuData[selectedIndustry].forEach(function(menuItem) {
           const option = document.createElement('option');
@@ -80,47 +77,68 @@
       }
     });
 
-    // --------------------------------------------------
-    // 2. LINE連携（LIFF）で名前を自動取得する仕組み
-    // --------------------------------------------------
-    // ★② 発行したLIFF IDをここに入れます
+    // ==========================================
+    // ★ココだけ佐浦さんのLIFF IDに書き換えてください★
+    // ==========================================
     const myLiffId = "【ここにLIFF IDを入れる（例: 1234567890-abcdefg）】";
 
-    // ③ 画面が開いた時にLIFFを起動する
+    // LIFFの初期化とプロフィール取得
     liff.init({ liffId: myLiffId })
       .then(() => {
         if (!liff.isLoggedIn()) {
-          // ログインしていなければ、LINEのログイン画面を出す
           liff.login();
         } else {
-          // ログインしていれば、プロフィール情報を取得！
-          liff.getProfile()
-            .then(profile => {
-              const displayName = profile.displayName; // LINEの登録名（例: なみへい）
-              
-              // 画面上の文字を「連携完了！」に書き換える
-              document.getElementById('status').textContent = "✅ " + displayName + "さん、LINE連携完了！";
-              document.getElementById('status').classList.remove('text-gray-500');
-              document.getElementById('status').classList.add('text-green-600', 'font-bold');
-              
-              // お名前の入力欄に、LINEの登録名を自動で入れる（お客様の手間が省けます！）
-              document.getElementById('name').value = displayName;
-            })
-            .catch((err) => {
-              console.log('プロフィール取得失敗', err);
-            });
+          liff.getProfile().then(profile => {
+            document.getElementById('status').textContent = "✅ " + profile.displayName + "さん、LINE連携完了！";
+            document.getElementById('status').classList.replace('text-gray-400', 'text-green-600');
+            document.getElementById('status').classList.add('font-bold');
+            document.getElementById('name').value = profile.displayName;
+          }).catch(err => console.error('プロフィール取得失敗', err));
         }
       })
-      .catch((err) => {
-        console.log('LIFF初期化失敗', err);
-      });
+      .catch(err => console.error('LIFF初期化失敗', err));
 
-    // --------------------------------------------------
-    // 3. 予約ボタンを押した時の仕組み（今回は確認用のポップアップだけ）
-    // --------------------------------------------------
+    // 予約送信処理（GASへデータを送る）
     document.getElementById('reservationForm').addEventListener('submit', async (e) => {
-      e.preventDefault(); // 画面がリロードされて入力内容が消えるのを防ぐ
-      alert('【デモ用】\nまずは画面の動きの確認です！\nこのあと、裏側のプログラム（GAS）と繋いで、実際にLINEに通知が飛ぶようにします👍');
+      e.preventDefault();
+      
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = '送信中...';
+      submitBtn.disabled = true;
+      submitBtn.classList.replace('bg-blue-600', 'bg-gray-400');
+
+      const payload = {
+        industry: industrySelect.value,
+        menu: menuSelect.value,
+        name: document.getElementById('name').value,
+        datetime: document.getElementById('datetime').value
+      };
+
+      try {
+        // 先ほど発行した佐浦さんのGAS受付窓口URL
+        const gasUrl = 'https://script.google.com/macros/s/AKfycbzwx2HVWCotgHoSmTdk7Rh11tBVtC6exikfOeKxehrZcHmZrzriZ77hmrLnCb1D1_43Rw/exec';
+        
+        const response = await fetch(gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' }, // CORSエラーを回避する黒子の魔法
+          body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        if(result.success) {
+          alert('✨ 予約完了！\n佐浦さんのスマホ（LINE）に通知が届いたか確認してください！');
+        } else {
+          alert('エラーが発生しました。');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('通信エラーが発生しました。');
+      } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        submitBtn.classList.replace('bg-gray-400', 'bg-blue-600');
+      }
     });
   </script>
 </body>
