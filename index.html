@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>【デモ用】マルチ業種 予約システム</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+  <div class="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
+    <h1 class="text-2xl font-bold text-center mb-4">予約システム デモ体験</h1>
+    
+    <p id="status" class="text-center text-sm text-gray-500 mb-6 border-b pb-4">LINE連携の準備中...</p>
+
+    <form id="reservationForm" class="space-y-4">
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700">体験する業種を選んでください</label>
+        <select id="industry" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          <option value="">選択してください</option>
+          <option value="美容室">✂️ 美容室</option>
+          <option value="飲食店">🍽️ 飲食店</option>
+          <option value="整体">💆 整体・マッサージ</option>
+          <option value="ネイル">💅 ネイルサロン</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">ご希望メニュー</label>
+        <select id="menu" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          <option value="">先に業種を選んでください</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">お名前（LINEから自動取得）</label>
+        <input type="text" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-100" readonly>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">ご希望日時</label>
+        <input type="datetime-local" id="datetime" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 mt-6 shadow-md transition-all">
+        この内容でテスト送信する
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // --------------------------------------------------
+    // 1. 業種に合わせてメニューの選択肢を変える仕組み
+    // --------------------------------------------------
+    const menuData = {
+      "美容室": ["カット＆カラー", "パーマ", "トリートメント"],
+      "飲食店": ["ディナーコース予約", "席のみ予約", "テイクアウト"],
+      "整体": ["全身もみほぐし60分", "骨盤矯正", "足つぼマッサージ"],
+      "ネイル": ["ジェルネイル（ハンド）", "フットネイル", "オフのみ"]
+    };
+
+    const industrySelect = document.getElementById('industry');
+    const menuSelect = document.getElementById('menu');
+
+    industrySelect.addEventListener('change', function() {
+      const selectedIndustry = this.value;
+      menuSelect.innerHTML = '<option value="">選択してください</option>'; // 一旦中身を空っぽにする
+      
+      // 選ばれた業種のメニューがあれば、それを選択肢に追加する
+      if (menuData[selectedIndustry]) {
+        menuData[selectedIndustry].forEach(function(menuItem) {
+          const option = document.createElement('option');
+          option.value = menuItem;
+          option.textContent = menuItem;
+          menuSelect.appendChild(option);
+        });
+      } else {
+        menuSelect.innerHTML = '<option value="">先に業種を選んでください</option>';
+      }
+    });
+
+    // --------------------------------------------------
+    // 2. LINE連携（LIFF）で名前を自動取得する仕組み
+    // --------------------------------------------------
+    // ★② 発行したLIFF IDをここに入れます
+    const myLiffId = "【ここにLIFF IDを入れる（例: 1234567890-abcdefg）】";
+
+    // ③ 画面が開いた時にLIFFを起動する
+    liff.init({ liffId: myLiffId })
+      .then(() => {
+        if (!liff.isLoggedIn()) {
+          // ログインしていなければ、LINEのログイン画面を出す
+          liff.login();
+        } else {
+          // ログインしていれば、プロフィール情報を取得！
+          liff.getProfile()
+            .then(profile => {
+              const displayName = profile.displayName; // LINEの登録名（例: なみへい）
+              
+              // 画面上の文字を「連携完了！」に書き換える
+              document.getElementById('status').textContent = "✅ " + displayName + "さん、LINE連携完了！";
+              document.getElementById('status').classList.remove('text-gray-500');
+              document.getElementById('status').classList.add('text-green-600', 'font-bold');
+              
+              // お名前の入力欄に、LINEの登録名を自動で入れる（お客様の手間が省けます！）
+              document.getElementById('name').value = displayName;
+            })
+            .catch((err) => {
+              console.log('プロフィール取得失敗', err);
+            });
+        }
+      })
+      .catch((err) => {
+        console.log('LIFF初期化失敗', err);
+      });
+
+    // --------------------------------------------------
+    // 3. 予約ボタンを押した時の仕組み（今回は確認用のポップアップだけ）
+    // --------------------------------------------------
+    document.getElementById('reservationForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // 画面がリロードされて入力内容が消えるのを防ぐ
+      alert('【デモ用】\nまずは画面の動きの確認です！\nこのあと、裏側のプログラム（GAS）と繋いで、実際にLINEに通知が飛ぶようにします👍');
+    });
+  </script>
+</body>
+</html>
