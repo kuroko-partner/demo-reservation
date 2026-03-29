@@ -129,7 +129,7 @@
         if(result.success) {
           alert('✨ 予約完了！\n佐浦さんのスマホ（LINE）に通知が届いたか確認してください！');
         } else {
-          alert('エラーが発生しました。');
+          alert('エラーが発生しました。\n原因: ' + result.message);
         }
       } catch (error) {
         console.error(error);
