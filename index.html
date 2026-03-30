@@ -39,6 +39,8 @@
         <input type="text" id="name" required class="block w-full rounded-xl border-gray-200 shadow-inner p-3 border bg-gray-100 text-gray-600 outline-none" readonly>
       </div>
 
+      <input type="hidden" id="userId" value="">
+
       <div>
         <label class="block text-sm font-bold text-gray-700 mb-1">ご希望日時</label>
         <input type="datetime-local" id="datetime" required class="block w-full rounded-xl border-gray-200 shadow-sm p-3 border bg-gray-50 focus:ring-2 focus:ring-blue-400 outline-none">
@@ -82,7 +84,7 @@
     // ==========================================
     const myLiffId = "2009628180-dIhbks2M";
 
-    // LIFFの初期化とプロフィール取得
+    // LIFFの初期化とプロフィール取得（エラー表示機能付き）
     liff.init({ liffId: myLiffId })
       .then(() => {
         if (!liff.isLoggedIn()) {
@@ -93,10 +95,17 @@
             document.getElementById('status').classList.replace('text-gray-400', 'text-green-600');
             document.getElementById('status').classList.add('font-bold');
             document.getElementById('name').value = profile.displayName;
-          }).catch(err => console.error('プロフィール取得失敗', err));
+            document.getElementById('userId').value = profile.userId; // 隠しデータにIDをセット
+          }).catch(err => {
+            document.getElementById('status').textContent = '❌ プロフィール取得エラー: ' + err.message;
+            document.getElementById('status').classList.replace('text-gray-400', 'text-red-500');
+          });
         }
       })
-      .catch(err => console.error('LIFF初期化失敗', err));
+      .catch(err => {
+        document.getElementById('status').textContent = '❌ LIFF初期化エラー: ' + err.message;
+        document.getElementById('status').classList.replace('text-gray-400', 'text-red-500');
+      });
 
     // 予約送信処理（GASへデータを送る）
     document.getElementById('reservationForm').addEventListener('submit', async (e) => {
@@ -112,6 +121,7 @@
         industry: industrySelect.value,
         menu: menuSelect.value,
         name: document.getElementById('name').value,
+        userId: document.getElementById('userId').value, // 隠しデータのIDも一緒に送る
         datetime: document.getElementById('datetime').value
       };
 
